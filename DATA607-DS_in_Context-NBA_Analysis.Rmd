@@ -423,13 +423,6 @@ Before the next slide, I want to warn that these results are the product of a mo
 #| warning: false
 #| results: false
 
-library(jsonlite)
-library(httr2)
-
-# 1. NBA.com's backend schedule endpoint
-nba_schedule_url <- "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2.json"
-schedule_url <- "https://raw.githubusercontent.com/sportsdataverse/hoopR-data/main/nba/schedules/csv/nba_schedule_2025.csv"
-
 schedule_2027_raw <- hoopR::espn_nba_scoreboard(season = 2027)
 schedule_2026_raw <- hoopR::espn_nba_scoreboard(season = 2026)
 
