@@ -159,7 +159,27 @@ full_features_df <- box_scores |>
 #| warning: false
 
 features_df <- full_features_df |>
-  select(game_id, season, game_date, team_id, team_winner, team_home_away, opponent_team_id, roll_pts_scored, roll_oreb, roll_dreb, roll_ast, roll_stl, roll_blk, roll_tov, roll_efg, roll_tovp, roll_ftr, roll_ts, hga, lgo, days_rest)
+  select(game_id, 
+         season, 
+         game_date, 
+         team_id, 
+         team_winner, 
+         team_home_away, 
+         opponent_team_id, 
+         roll_pts_scored, 
+         roll_oreb, 
+         roll_dreb, 
+         roll_ast, 
+         roll_stl, 
+         roll_blk, 
+         roll_tov, 
+         roll_efg, 
+         roll_tovp, 
+         roll_ftr, 
+         roll_ts, 
+         hga, 
+         lgo, 
+         days_rest)
 
 #glimpse(features_df)
 ```
@@ -260,7 +280,22 @@ test_data <- model_df |>
   filter(season>=2026)
 
 nba_recipe <- recipe(target_home_win ~ ., data = train_data) |>
-  step_rm(game_id, game_date, home_team, away_team, home_win, away_win, home_roll_ts, home_roll_ftr, home_roll_efg, away_roll_ts, away_roll_ftr, away_roll_efg, home_roll_pts, away_roll_pts, home_roll_tovp, away_roll_tovp) |>
+  step_rm(game_id, 
+          game_date, 
+          home_team, 
+          away_team, 
+          home_win, 
+          away_win, 
+          home_roll_ts, 
+          home_roll_ftr, 
+          home_roll_efg, 
+          away_roll_ts, 
+          away_roll_ftr, 
+          away_roll_efg, 
+          home_roll_pts, 
+          away_roll_pts, 
+          home_roll_tovp, 
+          away_roll_tovp) |>
   step_normalize(all_numeric_predictors())
 ```
 
@@ -287,8 +322,6 @@ nba_fit <- fit(nba_workflow, data = train_data)
 ```
 
 ::: {.notes}
-I am enthusiastic about machine learning but have limited experience beyond replicating others' workflows. I used tidymodels documentation and code examples, as well as an LLM (Gemini 4.6 flash, medium reasoning) to guide me through the implementation of this ML pipeline. 
-
 The 2019-2025 seasons were used as training data, while the 2026 season was reserved for validation testing. 
 
 Tidymodels was used to implement a Random Forest classification model (ranger), and the feature importance was evaluated via Gini impurity calculations.
@@ -540,12 +573,12 @@ team_lookup <- box_scores |>
 # 2. Calculate expected wins at Home (.pred_Win)
 home_wins_df <- predictions_2027 |>
   group_by(team_id = home_team) |>
-  summarise(home_wins = sum(.pred_Win))
+  summarize(home_wins = sum(.pred_Win))
 
 # 3. Calculate expected wins on the Road (.pred_Loss = Home loss -> Away win)
 away_wins_df <- predictions_2027 |>
   group_by(team_id = away_team) |>
-  summarise(away_wins = sum(.pred_Loss))
+  summarize(away_wins = sum(.pred_Loss))
 
 # 4. Combine into complete 2027 Projected Standings
 projected_standings_2027 <- home_wins_df |>
@@ -605,7 +638,7 @@ head(projected_standings_2027,10)
 # 1. Calculate Variance for Home games: p * (1 - p)
 home_var <- predictions_2027 |>
   group_by(team_id = home_team) |>
-  summarise(
+  summarize(
     home_wins = sum(.pred_Win),
     home_var  = sum(.pred_Win * (1 - .pred_Win))
   )
@@ -613,7 +646,7 @@ home_var <- predictions_2027 |>
 # 2. Calculate Variance for Away games: p * (1 - p)
 away_var <- predictions_2027 |>
   group_by(team_id = away_team) |>
-  summarise(
+  summarize(
     away_wins = sum(.pred_Loss),
     away_var  = sum(.pred_Loss * (1 - .pred_Loss))
   )
@@ -706,11 +739,11 @@ sim_results <- map_dfr(1:n_sims, function(sim_id) {
   # Tally simulated wins per team
   home_tallies <- sim_games |>
     group_by(team_id = home_team) |>
-    summarise(wins = sum(home_won_sim))
+    summarize(wins = sum(home_won_sim))
   
   away_tallies <- sim_games |>
     group_by(team_id = away_team) |>
-    summarise(wins = sum(1 - home_won_sim))
+    summarize(wins = sum(1 - home_won_sim))
   
   home_tallies |>
     left_join(away_tallies, by = "team_id") |>
@@ -730,15 +763,15 @@ sim_results <- map_dfr(1:n_sims, function(sim_id) {
 standings_ci_sim <- sim_results |>
   left_join(team_lookup, by = "team_id") |>
   group_by(Team = team_name) |>
-  summarise(
-    Mean_Wins = round(mean(total_wins), 1),
-    Median_Wins = median(total_wins),
+  summarize(
+    mean_Wins = round(mean(total_wins), 1),
+    median_Wins = median(total_wins),
     `5th_Percentile` = quantile(total_wins, 0.05),   # Lower bound of 90% CI
     `95th_Percentile` = quantile(total_wins, 0.95),  # Upper bound of 90% CI
     `2.5th_Percentile` = quantile(total_wins, 0.025), # Lower bound of 95% CI
     `97.5th_Percentile` = quantile(total_wins, 0.975) # Upper bound of 95% CI
   ) |>
-  arrange(desc(Mean_Wins))
+  arrange(desc(mean_Wins))
 
 head(standings_ci_sim, 10)
 ```
