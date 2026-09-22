@@ -359,11 +359,11 @@ predictions <- predict(nba_fit, test_data) |>
   bind_cols(test_data)
 
 # Metrics (Accuracy, ROC-AUC)
-truth <- predictions |>
-  metrics(truth = target_home_win, estimate = .pred_class)
+accuracy <- predictions |>
+  metrics(accuracy = target_home_win, estimate = .pred_class)
 
 roc_auc <- predictions |>
-  roc_auc(truth = target_home_win, .pred_Win, event_level = "second")
+  roc_auc(accuracy = target_home_win, .pred_Win, event_level = "second")
 ```
 
 ```{r feature-plots}
