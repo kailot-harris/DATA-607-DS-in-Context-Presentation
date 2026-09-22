@@ -248,8 +248,8 @@ Kailot C. Harris
 <p><span style="font-size: 75%"><code>hoopR</code>, <code>tidyverse</code>, <code>slider</code>, and <code>tidymodels</code></span></p>
 </div>
 <aside class="notes">
-<p>I came across this medium article in which the author, in Python, used certain ML tools to predict NBA games with a reasonable degree of accuracy. I have replicated the author’s approach, however using R.</p>
-<p>The main goal is to validate model accuracy against the resolved 2026 regular NBA season and then predict season-end rankings for the 2027 season.</p>
+<p>I came across this medium article in which the author, using Python, applied certain ML tools to predict NBA games with a reasonable degree of accuracy. I have replicated the author’s approach using R.</p>
+<p>The main goal of this effort is to validate model accuracy against the resolved 2026 regular NBA season, and then predict season-end rankings for the 2027 season.</p>
 <p>The listed R packages were used for importing data, tidying data, calculating window functions, and applying models to training and testing data.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
@@ -361,7 +361,6 @@ Kailot C. Harris
 <span id="cb4-5"><a href=""></a>nba_fit <span class="ot">&lt;-</span> <span class="fu">fit</span>(nba_workflow, <span class="at">data =</span> train_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <aside class="notes">
-<p>I am enthusiastic about machine learning but have limited experience beyond replicating others’ workflows. I used tidymodels documentation and code examples, as well as an LLM (Gemini 4.6 flash, medium reasoning) to guide me through the implementation of this ML pipeline.</p>
 <p>The 2019-2025 seasons were used as training data, while the 2026 season was reserved for validation testing.</p>
 <p>Tidymodels was used to implement a Random Forest classification model (ranger), and the feature importance was evaluated via Gini impurity calculations.</p>
 <p>Here we see the setup for the random forest engine, and a workflow item that combines the model and inputs to fit the weights of the feature set against the known game outcomes.</p>
@@ -437,57 +436,57 @@ Kailot C. Harris
 <tr class="odd">
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">Knicks</td>
-<td style="text-align: center;">55.7</td>
-<td style="text-align: center;">47.4</td>
-<td style="text-align: center;">64.0</td>
-<td style="text-align: center;">4.22</td>
+<td style="text-align: center;">56.3</td>
+<td style="text-align: center;">48.1</td>
+<td style="text-align: center;">64.5</td>
+<td style="text-align: center;">4.20</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">2</td>
 <td style="text-align: center;">Nuggets</td>
-<td style="text-align: center;">50.5</td>
-<td style="text-align: center;">41.9</td>
-<td style="text-align: center;">59.1</td>
-<td style="text-align: center;">4.40</td>
-</tr>
-<tr class="odd">
-<td style="text-align: center;">3</td>
-<td style="text-align: center;">Thunder</td>
 <td style="text-align: center;">49.9</td>
 <td style="text-align: center;">41.2</td>
 <td style="text-align: center;">58.6</td>
 <td style="text-align: center;">4.42</td>
 </tr>
+<tr class="odd">
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">Thunder</td>
+<td style="text-align: center;">49.5</td>
+<td style="text-align: center;">40.8</td>
+<td style="text-align: center;">58.2</td>
+<td style="text-align: center;">4.43</td>
+</tr>
 <tr class="even">
 <td style="text-align: center;">4</td>
 <td style="text-align: center;">Celtics</td>
-<td style="text-align: center;">49.2</td>
-<td style="text-align: center;">40.5</td>
-<td style="text-align: center;">57.9</td>
-<td style="text-align: center;">4.44</td>
+<td style="text-align: center;">48.6</td>
+<td style="text-align: center;">39.9</td>
+<td style="text-align: center;">57.3</td>
+<td style="text-align: center;">4.45</td>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">5</td>
 <td style="text-align: center;">Heat</td>
-<td style="text-align: center;">47.8</td>
-<td style="text-align: center;">39.0</td>
-<td style="text-align: center;">56.6</td>
-<td style="text-align: center;">4.47</td>
+<td style="text-align: center;">48.5</td>
+<td style="text-align: center;">39.8</td>
+<td style="text-align: center;">57.2</td>
+<td style="text-align: center;">4.45</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">6</td>
 <td style="text-align: center;">Spurs</td>
-<td style="text-align: center;">47.7</td>
-<td style="text-align: center;">38.9</td>
-<td style="text-align: center;">56.5</td>
-<td style="text-align: center;">4.47</td>
+<td style="text-align: center;">48.0</td>
+<td style="text-align: center;">39.3</td>
+<td style="text-align: center;">56.7</td>
+<td style="text-align: center;">4.46</td>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">7</td>
 <td style="text-align: center;">Clippers</td>
-<td style="text-align: center;">47.6</td>
-<td style="text-align: center;">38.8</td>
-<td style="text-align: center;">56.4</td>
+<td style="text-align: center;">47.5</td>
+<td style="text-align: center;">38.7</td>
+<td style="text-align: center;">56.3</td>
 <td style="text-align: center;">4.47</td>
 </tr>
 <tr class="even">
@@ -501,18 +500,18 @@ Kailot C. Harris
 <tr class="odd">
 <td style="text-align: center;">9</td>
 <td style="text-align: center;">Raptors</td>
-<td style="text-align: center;">46.0</td>
-<td style="text-align: center;">37.2</td>
-<td style="text-align: center;">54.8</td>
+<td style="text-align: center;">46.1</td>
+<td style="text-align: center;">37.3</td>
+<td style="text-align: center;">54.9</td>
 <td style="text-align: center;">4.49</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">10</td>
 <td style="text-align: center;">Hornets</td>
-<td style="text-align: center;">44.7</td>
-<td style="text-align: center;">35.9</td>
-<td style="text-align: center;">53.5</td>
-<td style="text-align: center;">4.51</td>
+<td style="text-align: center;">45.3</td>
+<td style="text-align: center;">36.5</td>
+<td style="text-align: center;">54.1</td>
+<td style="text-align: center;">4.50</td>
 </tr>
 </tbody>
 </table>

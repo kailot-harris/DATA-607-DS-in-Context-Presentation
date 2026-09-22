@@ -54,9 +54,9 @@ Hello, and welcome everyone to my talk today. I will first outline the data pipe
 :::
 
 ::: {.notes}
-I came across this medium article in which the author, in Python, used certain ML tools to predict NBA games with a reasonable degree of accuracy. I have replicated the author's approach, however using R. 
+I came across this medium article in which the author, using Python, applied certain ML tools to predict NBA games with a reasonable degree of accuracy. I have replicated the author's approach using R. 
 
-The main goal is to validate model accuracy against the resolved 2026 regular NBA season and then predict season-end rankings for the 2027 season.
+The main goal of this effort is to validate model accuracy against the resolved 2026 regular NBA season, and then predict season-end rankings for the 2027 season.
 
 The listed R packages were used for importing data, tidying data, calculating window functions, and applying models to training and testing data.
 :::
@@ -359,11 +359,11 @@ predictions <- predict(nba_fit, test_data) |>
   bind_cols(test_data)
 
 # Metrics (Accuracy, ROC-AUC)
-accuracy <- predictions |>
-  metrics(accuracy = target_home_win, estimate = .pred_class)
+truth <- predictions |>
+  metrics(truth = target_home_win, estimate = .pred_class)
 
 roc_auc <- predictions |>
-  roc_auc(accuracy = target_home_win, .pred_Win, event_level = "second")
+  roc_auc(truth = target_home_win, .pred_Win, event_level = "second")
 ```
 
 ```{r feature-plots}
@@ -375,7 +375,7 @@ roc_auc <- predictions |>
 # 1. Extract the ranger engine directly
 rf_engine <- extract_fit_engine(nba_fit)
 
-# 2. Extract and sort purely in Base R (no dplyr needed)
+# 2. Extract and sort
 imp_vec <- rf_engine$variable.importance
 importance_df <- data.frame(
   feature = names(imp_vec),
@@ -391,8 +391,8 @@ top10_df <- head(importance_df, 10)
 #| echo: false
 #| message: false
 #| warning: false
-#| fig-width: 9
-#| fig-height: 4.5
+#| fig-width: 6
+#| fig-height: 4
 #| out-width: "95%"
 #| outputs: true
 
@@ -423,7 +423,6 @@ Before the next slide, I want to warn that these results are the product of a mo
 #| warning: false
 #| results: false
 
-# install.packages("jsonlite")
 library(jsonlite)
 library(httr2)
 
@@ -438,7 +437,11 @@ schedule_2026 <- schedule_2026_raw |>
   filter(season_type == 2) |>
   mutate(season_2027=if_else(season==2027, TRUE, FALSE)) |>
   select(
-    game_id,     game_date,     season,     season_2027,     home_team = home_team_id,
+    game_id,     
+    game_date,     
+    season,     
+    season_2027,     
+    home_team = home_team_id,
     away_team = away_team_id
   ) |>
   arrange(game_date)
@@ -447,7 +450,11 @@ schedule_2027 <- schedule_2027_raw |>
   filter(season_type == 2) |>
   mutate(season_2027=if_else(season==2027, TRUE, FALSE)) |>
   select(
-    game_id,     game_date,     season,     season_2027,     home_team = home_team_id,
+    game_id,     
+    game_date,     
+    season,     
+    season_2027,     
+    home_team = home_team_id,
     away_team = away_team_id
   ) |>
   arrange(game_date)
@@ -456,7 +463,10 @@ schedule_2026_2027 <- bind_rows(schedule_2026,schedule_2027)
 
 sched_2027 <- schedule_2026_2027 |>
   filter(season_2027==TRUE) |>
-  select(game_id, game_date, home_team, away_team)
+  select(game_id, 
+         game_date, 
+         home_team, 
+         away_team)
 
 #head(sched_2027)
 
@@ -464,7 +474,11 @@ sched_2026_2027 <- bind_rows(schedule_2026_raw, schedule_2027_raw) |>
   filter(season_type == 2) |>
   mutate(season_2027 = if_else(season == 2027, TRUE, FALSE)) |>
   select(
-    game_id,     game_date,     season,     season_2027,     home_team = home_team_id,
+    game_id,     
+    game_date,     
+    season,     
+    season_2027,     
+    home_team = home_team_id,
     away_team = away_team_id
   ) |>
   arrange(game_date)
@@ -486,7 +500,9 @@ team_profiles_2027 <- features_df |>
   group_by(team_id) |>
   slice_tail(n = 1) |>
   ungroup() |>
-  mutate(team_id = as.integer(team_id), roll_pts = roll_pts_scored, roll_treb = roll_oreb+roll_dreb) |>
+  mutate(team_id = as.integer(team_id), 
+         roll_pts = roll_pts_scored, 
+         roll_treb = roll_oreb+roll_dreb) |>
   select(
     team_id,
     roll_ts,
@@ -508,7 +524,7 @@ games_2027 <- sched_2026_2027 |>
   filter(season_2027 == TRUE)
 
 team_profiles_2027 |>
-  mutate(roll_treb = roll_oreb+roll_dreb)
+  mutate(roll_treb = roll_oreb + roll_dreb)
 
 # 2. Join Home & Away baseline ratings (from your 2026 profiles)
 model_input_2027 <- games_2027 |>
@@ -551,7 +567,6 @@ model_input_2027 <- games_2027 |>
 #| warning: false
 #| results: false
 
-
 # 3. Predict Win Probabilities for the 2027 season!
 predictions_2027 <- model_input_2027 |>
   bind_cols(predict(nba_fit, model_input_2027, type = "prob")) |>
@@ -566,7 +581,8 @@ predictions_2027 <- model_input_2027 |>
 
 # 1. Create a Team ID to Team Name lookup table
 team_lookup <- box_scores |>
-  select(team_id, team_name = team_short_display_name) |>
+  select(team_id, 
+         team_name = team_short_display_name) |>
   distinct() |>
   mutate(team_id = as.integer(team_id))
 
@@ -590,7 +606,10 @@ projected_standings_2027 <- home_wins_df |>
   ) |>
   arrange(desc(projected_wins)) |>
   mutate(Rank = row_number()) |>
-  select(Rank, Team = team_name, Wins = projected_wins, Losses = projected_losses)
+  select(Rank, 
+         Team = team_name, 
+         Wins = projected_wins, 
+         Losses = projected_losses)
 
 # 1. Count actual scheduled games and calculate true 82-game pace
 projected_standings_82 <- home_wins_df |>
@@ -669,18 +688,28 @@ standings_ci_analytical <- home_var |>
     proj_wins    = round(total_wins, 1)
   ) |>
   arrange(desc(proj_wins)) |>
-  select(Team = team_name, Projected = proj_wins, `95% CI Lower` = ci_lower_95, `95% CI Upper` = ci_upper_95, SE = se_wins)
+  select(Team = team_name, 
+         Projected = proj_wins, 
+         `95% CI Lower` = ci_lower_95, 
+         `95% CI Upper` = ci_upper_95, 
+         SE = se_wins)
 
 head(standings_ci_analytical, 10)
 
 standings_ci_82 <- home_var |>
   left_join(away_var, by = "team_id") |>
   left_join(
-    predictions_2027 |> count(home_team, name = "home_games") |> rename(team_id = home_team),
+    predictions_2027 |> 
+      count(home_team, 
+            name = "home_games") |> 
+      rename(team_id = home_team),
     by = "team_id"
   ) |>
   left_join(
-    predictions_2027 |> count(away_team, name = "away_games") |> rename(team_id = away_team),
+    predictions_2027 |> 
+      count(away_team, 
+            name = "away_games") |> 
+      rename(team_id = away_team),
     by = "team_id"
   ) |>
   left_join(team_lookup, by = "team_id") |>
@@ -701,7 +730,12 @@ standings_ci_82 <- home_var |>
   ) |>
   arrange(desc(wins_82_pace)) |>
   mutate(Rank = row_number()) |>
-  select(Rank, Team = team_name, Projected = wins_82_pace, `95% CI Lower` = ci_lower_95, `95% CI Upper` = ci_upper_95, SE = se_82)
+  select(Rank, 
+         Team = team_name, 
+         Projected = wins_82_pace, 
+         `95% CI Lower` = ci_lower_95, 
+         `95% CI Upper` = ci_upper_95, 
+         SE = se_82)
 ```
 
 ```{r standings-2027}
