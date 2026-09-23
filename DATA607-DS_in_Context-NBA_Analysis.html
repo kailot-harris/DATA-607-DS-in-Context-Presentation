@@ -6,8 +6,8 @@
 <script src="DATA607-DS_in_Context-NBA_Analysis_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="DATA607-DS_in_Context-NBA_Analysis_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="DATA607-DS_in_Context-NBA_Analysis_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="DATA607-DS_in_Context-NBA_Analysis_files/libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.9.38">
+<link href="DATA607-DS_in_Context-NBA_Analysis_files/libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.10.18">
 
   <meta name="author" content="Kailot C. Harris">
   <meta name="dcterms.date" content="2026-09-21">
@@ -21,10 +21,13 @@
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -204,7 +207,7 @@
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
 <div class="quarto-title-author-name">
-Kailot C. Harris 
+Kailot C. Harris
 </div>
 </div>
 </div>
@@ -268,7 +271,7 @@ Kailot C. Harris
 <p><strong>Data Source:</strong></p>
 <p><em>Game-level box score data from <code>hoopR</code> package (2019-2026 seasons)</em></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a>box_scores <span class="ot">&lt;-</span> hoopR<span class="sc">::</span><span class="fu">load_nba_team_box</span>(<span class="at">seasons =</span> <span class="dv">2019</span><span class="sc">:</span><span class="dv">2026</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="" aria-label="1"></a>box_scores <span class="ot">&lt;-</span> hoopR<span class="sc">::</span><span class="fu">load_nba_team_box</span>(<span class="at">seasons =</span> <span class="dv">2019</span><span class="sc">:</span><span class="dv">2026</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><strong>Rolling Metrics:</strong></p>
 <p><em>18-game rolling averages are computed for:</em></p>
@@ -281,49 +284,49 @@ Kailot C. Harris
 <span style="color: #2a9d8f; font-weight: bold; cursor: pointer;">Click to view feature engineering R code</span>
 </summary>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a><span class="co">#Empirically derived rolling-calc-window</span></span>
-<span id="cb2-2"><a href=""></a>n_rolling_days <span class="ot">&lt;-</span> <span class="dv">18</span></span>
-<span id="cb2-3"><a href=""></a></span>
-<span id="cb2-4"><a href=""></a>full_features_df <span class="ot">&lt;-</span> box_scores <span class="sc">|&gt;</span></span>
-<span id="cb2-5"><a href=""></a>  <span class="fu">arrange</span>(team_id, game_date) <span class="sc">|&gt;</span></span>
-<span id="cb2-6"><a href=""></a>  <span class="fu">group_by</span>(team_id) <span class="sc">|&gt;</span></span>
-<span id="cb2-7"><a href=""></a>  <span class="fu">mutate</span>(</span>
-<span id="cb2-8"><a href=""></a>    <span class="co">#define home-game advantage</span></span>
-<span id="cb2-9"><a href=""></a>    <span class="at">hga =</span> <span class="fu">if_else</span>(<span class="fu">str_detect</span>(team_home_away, <span class="st">"away"</span>),<span class="dv">0</span>,<span class="dv">1</span>),</span>
-<span id="cb2-10"><a href=""></a>    </span>
-<span id="cb2-11"><a href=""></a>    <span class="co">#define last game outcome</span></span>
-<span id="cb2-12"><a href=""></a>    <span class="at">lgo =</span> <span class="fu">lag</span>(<span class="fu">as.integer</span>(team_winner), <span class="at">n =</span> <span class="dv">1</span>, <span class="at">default =</span> <span class="cn">NA</span>),</span>
-<span id="cb2-13"><a href=""></a>    </span>
-<span id="cb2-14"><a href=""></a>    <span class="co">#define effective field goal percentage</span></span>
-<span id="cb2-15"><a href=""></a>    <span class="at">efg =</span> (field_goals_made <span class="sc">+</span> <span class="fl">0.5</span><span class="sc">*</span>three_point_field_goals_made)<span class="sc">/</span>(field_goals_attempted),</span>
-<span id="cb2-16"><a href=""></a>    </span>
-<span id="cb2-17"><a href=""></a>    <span class="co">#define turnover rate percentage</span></span>
-<span id="cb2-18"><a href=""></a>    <span class="at">tov =</span> (total_turnovers)<span class="sc">/</span>(field_goals_attempted <span class="sc">+</span> <span class="fl">0.44</span> <span class="sc">*</span> free_throws_attempted <span class="sc">+</span> total_turnovers),</span>
-<span id="cb2-19"><a href=""></a>    </span>
-<span id="cb2-20"><a href=""></a>    <span class="co">#define free throw rate</span></span>
-<span id="cb2-21"><a href=""></a>    <span class="at">ftr =</span> free_throws_attempted<span class="sc">/</span>field_goals_attempted,</span>
-<span id="cb2-22"><a href=""></a>    </span>
-<span id="cb2-23"><a href=""></a>    <span class="co">#define true shooting percentage</span></span>
-<span id="cb2-24"><a href=""></a>    <span class="at">ts =</span> team_score <span class="sc">/</span> (<span class="dv">2</span><span class="sc">*</span> (field_goals_attempted <span class="sc">+</span> (<span class="fl">0.44</span> <span class="sc">*</span> free_throws_attempted))),</span>
-<span id="cb2-25"><a href=""></a>    </span>
-<span id="cb2-26"><a href=""></a>    <span class="co"># Rolling n-game average of offensive rating and shooting %</span></span>
-<span id="cb2-27"><a href=""></a>    <span class="at">roll_pts_scored =</span> <span class="fu">slide_dbl</span>(team_score, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb2-28"><a href=""></a>    <span class="at">roll_field_goal_pct =</span> <span class="fu">slide_dbl</span>(field_goal_pct, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb2-29"><a href=""></a>    <span class="at">roll_oreb =</span> <span class="fu">slide_dbl</span>(offensive_rebounds, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb2-30"><a href=""></a>    <span class="at">roll_dreb =</span> <span class="fu">slide_dbl</span>(defensive_rebounds, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb2-31"><a href=""></a>    <span class="at">roll_reb =</span> <span class="fu">slide_dbl</span>(total_rebounds, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb2-32"><a href=""></a>    <span class="at">roll_ast =</span> <span class="fu">slide_dbl</span>(assists, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb2-33"><a href=""></a>    <span class="at">roll_stl =</span> <span class="fu">slide_dbl</span>(steals, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb2-34"><a href=""></a>    <span class="at">roll_blk =</span> <span class="fu">slide_dbl</span>(blocks, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb2-35"><a href=""></a>    <span class="at">roll_tov =</span> <span class="fu">slide_dbl</span>(turnovers, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb2-36"><a href=""></a>    <span class="at">roll_efg =</span> <span class="fu">slide_dbl</span>(efg, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb2-37"><a href=""></a>    <span class="at">roll_tovp =</span> <span class="fu">slide_dbl</span>(tov, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb2-38"><a href=""></a>    <span class="at">roll_ftr =</span> <span class="fu">slide_dbl</span>(ftr, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb2-39"><a href=""></a>    <span class="at">roll_ts =</span> <span class="fu">slide_dbl</span>(ts, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb2-40"><a href=""></a>    </span>
-<span id="cb2-41"><a href=""></a>    <span class="at">days_rest =</span> <span class="fu">as.numeric</span>(game_date <span class="sc">-</span> <span class="fu">lag</span>(game_date))</span>
-<span id="cb2-42"><a href=""></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb2-43"><a href=""></a>  <span class="fu">ungroup</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="" aria-label="1"></a><span class="co">#Empirically derived rolling-calc-window</span></span>
+<span id="cb2-2"><a href="" aria-label="2"></a>n_rolling_days <span class="ot">&lt;-</span> <span class="dv">18</span></span>
+<span id="cb2-3"><a href="" aria-label="3"></a></span>
+<span id="cb2-4"><a href="" aria-label="4"></a>full_features_df <span class="ot">&lt;-</span> box_scores <span class="sc">|&gt;</span></span>
+<span id="cb2-5"><a href="" aria-label="5"></a>  <span class="fu">arrange</span>(team_id, game_date) <span class="sc">|&gt;</span></span>
+<span id="cb2-6"><a href="" aria-label="6"></a>  <span class="fu">group_by</span>(team_id) <span class="sc">|&gt;</span></span>
+<span id="cb2-7"><a href="" aria-label="7"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-8"><a href="" aria-label="8"></a>    <span class="co">#define home-game advantage</span></span>
+<span id="cb2-9"><a href="" aria-label="9"></a>    <span class="at">hga =</span> <span class="fu">if_else</span>(<span class="fu">str_detect</span>(team_home_away, <span class="st">"away"</span>),<span class="dv">0</span>,<span class="dv">1</span>),</span>
+<span id="cb2-10"><a href="" aria-label="10"></a>    </span>
+<span id="cb2-11"><a href="" aria-label="11"></a>    <span class="co">#define last game outcome</span></span>
+<span id="cb2-12"><a href="" aria-label="12"></a>    <span class="at">lgo =</span> <span class="fu">lag</span>(<span class="fu">as.integer</span>(team_winner), <span class="at">n =</span> <span class="dv">1</span>, <span class="at">default =</span> <span class="cn">NA</span>),</span>
+<span id="cb2-13"><a href="" aria-label="13"></a>    </span>
+<span id="cb2-14"><a href="" aria-label="14"></a>    <span class="co">#define effective field goal percentage</span></span>
+<span id="cb2-15"><a href="" aria-label="15"></a>    <span class="at">efg =</span> (field_goals_made <span class="sc">+</span> <span class="fl">0.5</span><span class="sc">*</span>three_point_field_goals_made)<span class="sc">/</span>(field_goals_attempted),</span>
+<span id="cb2-16"><a href="" aria-label="16"></a>    </span>
+<span id="cb2-17"><a href="" aria-label="17"></a>    <span class="co">#define turnover rate percentage</span></span>
+<span id="cb2-18"><a href="" aria-label="18"></a>    <span class="at">tov =</span> (total_turnovers)<span class="sc">/</span>(field_goals_attempted <span class="sc">+</span> <span class="fl">0.44</span> <span class="sc">*</span> free_throws_attempted <span class="sc">+</span> total_turnovers),</span>
+<span id="cb2-19"><a href="" aria-label="19"></a>    </span>
+<span id="cb2-20"><a href="" aria-label="20"></a>    <span class="co">#define free throw rate</span></span>
+<span id="cb2-21"><a href="" aria-label="21"></a>    <span class="at">ftr =</span> free_throws_attempted<span class="sc">/</span>field_goals_attempted,</span>
+<span id="cb2-22"><a href="" aria-label="22"></a>    </span>
+<span id="cb2-23"><a href="" aria-label="23"></a>    <span class="co">#define true shooting percentage</span></span>
+<span id="cb2-24"><a href="" aria-label="24"></a>    <span class="at">ts =</span> team_score <span class="sc">/</span> (<span class="dv">2</span><span class="sc">*</span> (field_goals_attempted <span class="sc">+</span> (<span class="fl">0.44</span> <span class="sc">*</span> free_throws_attempted))),</span>
+<span id="cb2-25"><a href="" aria-label="25"></a>    </span>
+<span id="cb2-26"><a href="" aria-label="26"></a>    <span class="co"># Rolling n-game average of offensive rating and shooting %</span></span>
+<span id="cb2-27"><a href="" aria-label="27"></a>    <span class="at">roll_pts_scored =</span> <span class="fu">slide_dbl</span>(team_score, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
+<span id="cb2-28"><a href="" aria-label="28"></a>    <span class="at">roll_field_goal_pct =</span> <span class="fu">slide_dbl</span>(field_goal_pct, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
+<span id="cb2-29"><a href="" aria-label="29"></a>    <span class="at">roll_oreb =</span> <span class="fu">slide_dbl</span>(offensive_rebounds, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
+<span id="cb2-30"><a href="" aria-label="30"></a>    <span class="at">roll_dreb =</span> <span class="fu">slide_dbl</span>(defensive_rebounds, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
+<span id="cb2-31"><a href="" aria-label="31"></a>    <span class="at">roll_reb =</span> <span class="fu">slide_dbl</span>(total_rebounds, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
+<span id="cb2-32"><a href="" aria-label="32"></a>    <span class="at">roll_ast =</span> <span class="fu">slide_dbl</span>(assists, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
+<span id="cb2-33"><a href="" aria-label="33"></a>    <span class="at">roll_stl =</span> <span class="fu">slide_dbl</span>(steals, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
+<span id="cb2-34"><a href="" aria-label="34"></a>    <span class="at">roll_blk =</span> <span class="fu">slide_dbl</span>(blocks, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
+<span id="cb2-35"><a href="" aria-label="35"></a>    <span class="at">roll_tov =</span> <span class="fu">slide_dbl</span>(turnovers, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
+<span id="cb2-36"><a href="" aria-label="36"></a>    <span class="at">roll_efg =</span> <span class="fu">slide_dbl</span>(efg, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
+<span id="cb2-37"><a href="" aria-label="37"></a>    <span class="at">roll_tovp =</span> <span class="fu">slide_dbl</span>(tov, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
+<span id="cb2-38"><a href="" aria-label="38"></a>    <span class="at">roll_ftr =</span> <span class="fu">slide_dbl</span>(ftr, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
+<span id="cb2-39"><a href="" aria-label="39"></a>    <span class="at">roll_ts =</span> <span class="fu">slide_dbl</span>(ts, mean, <span class="at">.before =</span> n_rolling_days, <span class="at">.after =</span> <span class="sc">-</span><span class="dv">1</span>),</span>
+<span id="cb2-40"><a href="" aria-label="40"></a>    </span>
+<span id="cb2-41"><a href="" aria-label="41"></a>    <span class="at">days_rest =</span> <span class="fu">as.numeric</span>(game_date <span class="sc">-</span> <span class="fu">lag</span>(game_date))</span>
+<span id="cb2-42"><a href="" aria-label="42"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb2-43"><a href="" aria-label="43"></a>  <span class="fu">ungroup</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </details>
 <aside class="notes">
@@ -350,15 +353,15 @@ Kailot C. Harris
 <p><strong>Algorithm:</strong></p>
 <p><em>Random forest classification model (<code>ranger</code>) with 500 trees, evaluating Gini impurity</em></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a>rf_spec <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">trees=</span><span class="dv">500</span>, <span class="at">mode =</span> <span class="st">"classification"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb3-2"><a href=""></a>  <span class="fu">set_engine</span>(<span class="st">"ranger"</span>, <span class="at">importance =</span> <span class="st">"impurity"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="" aria-label="1"></a>rf_spec <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">trees=</span><span class="dv">500</span>, <span class="at">mode =</span> <span class="st">"classification"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="" aria-label="2"></a>  <span class="fu">set_engine</span>(<span class="st">"ranger"</span>, <span class="at">importance =</span> <span class="st">"impurity"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a>nba_workflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span></span>
-<span id="cb4-2"><a href=""></a>  <span class="fu">add_recipe</span>(nba_recipe) <span class="sc">|&gt;</span></span>
-<span id="cb4-3"><a href=""></a>  <span class="fu">add_model</span>(rf_spec)</span>
-<span id="cb4-4"><a href=""></a></span>
-<span id="cb4-5"><a href=""></a>nba_fit <span class="ot">&lt;-</span> <span class="fu">fit</span>(nba_workflow, <span class="at">data =</span> train_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="" aria-label="1"></a>nba_workflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="" aria-label="2"></a>  <span class="fu">add_recipe</span>(nba_recipe) <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href="" aria-label="3"></a>  <span class="fu">add_model</span>(rf_spec)</span>
+<span id="cb4-4"><a href="" aria-label="4"></a></span>
+<span id="cb4-5"><a href="" aria-label="5"></a>nba_fit <span class="ot">&lt;-</span> <span class="fu">fit</span>(nba_workflow, <span class="at">data =</span> train_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <aside class="notes">
 <p>The 2019-2025 seasons were used as training data, while the 2026 season was reserved for validation testing.</p>
@@ -436,17 +439,17 @@ Kailot C. Harris
 <tr class="odd">
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">Knicks</td>
-<td style="text-align: center;">55.6</td>
-<td style="text-align: center;">47.3</td>
-<td style="text-align: center;">63.9</td>
+<td style="text-align: center;">55.7</td>
+<td style="text-align: center;">47.4</td>
+<td style="text-align: center;">64.0</td>
 <td style="text-align: center;">4.23</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">2</td>
 <td style="text-align: center;">Nuggets</td>
-<td style="text-align: center;">50.3</td>
-<td style="text-align: center;">41.7</td>
-<td style="text-align: center;">58.9</td>
+<td style="text-align: center;">50.2</td>
+<td style="text-align: center;">41.6</td>
+<td style="text-align: center;">58.8</td>
 <td style="text-align: center;">4.41</td>
 </tr>
 <tr class="odd">
@@ -468,49 +471,49 @@ Kailot C. Harris
 <tr class="odd">
 <td style="text-align: center;">5</td>
 <td style="text-align: center;">Heat</td>
-<td style="text-align: center;">48.8</td>
-<td style="text-align: center;">40.1</td>
-<td style="text-align: center;">57.5</td>
+<td style="text-align: center;">48.5</td>
+<td style="text-align: center;">39.8</td>
+<td style="text-align: center;">57.2</td>
 <td style="text-align: center;">4.45</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">6</td>
 <td style="text-align: center;">Spurs</td>
-<td style="text-align: center;">47.7</td>
-<td style="text-align: center;">38.9</td>
-<td style="text-align: center;">56.5</td>
-<td style="text-align: center;">4.47</td>
+<td style="text-align: center;">48.2</td>
+<td style="text-align: center;">39.5</td>
+<td style="text-align: center;">56.9</td>
+<td style="text-align: center;">4.46</td>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">7</td>
 <td style="text-align: center;">Clippers</td>
-<td style="text-align: center;">47.3</td>
-<td style="text-align: center;">38.5</td>
-<td style="text-align: center;">56.1</td>
-<td style="text-align: center;">4.47</td>
+<td style="text-align: center;">47.1</td>
+<td style="text-align: center;">38.3</td>
+<td style="text-align: center;">55.9</td>
+<td style="text-align: center;">4.48</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">8</td>
 <td style="text-align: center;">Rockets</td>
-<td style="text-align: center;">46.7</td>
-<td style="text-align: center;">37.9</td>
-<td style="text-align: center;">55.5</td>
+<td style="text-align: center;">46.9</td>
+<td style="text-align: center;">38.1</td>
+<td style="text-align: center;">55.7</td>
 <td style="text-align: center;">4.48</td>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">9</td>
-<td style="text-align: center;">Hornets</td>
-<td style="text-align: center;">45.2</td>
-<td style="text-align: center;">36.4</td>
-<td style="text-align: center;">54.0</td>
+<td style="text-align: center;">Raptors</td>
+<td style="text-align: center;">45.6</td>
+<td style="text-align: center;">36.8</td>
+<td style="text-align: center;">54.4</td>
 <td style="text-align: center;">4.50</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">10</td>
-<td style="text-align: center;">Raptors</td>
-<td style="text-align: center;">45.1</td>
-<td style="text-align: center;">36.3</td>
-<td style="text-align: center;">53.9</td>
+<td style="text-align: center;">Hornets</td>
+<td style="text-align: center;">45.5</td>
+<td style="text-align: center;">36.7</td>
+<td style="text-align: center;">54.3</td>
 <td style="text-align: center;">4.50</td>
 </tr>
 </tbody>
@@ -597,6 +600,8 @@ Kailot C. Harris
 <p>— <em>All logic, data pipeline design, and outputs were verified by the author.</em></p>
 <aside class="notes">
 <p>Thank you everyone for your time and attention. I’m now happy to take any questions.</p>
+<p>Additional notes: Gini Impurity is the probability of incorrectly classifying a randomly chosen element in the dataset if it were randomly labeled according to the class distribution in the dataset.</p>
+<p>RF: an ensemble machine learning algorithm used for categorical classification tasks. It works by building a multitude of independent decision trees during its training phase and combining their predictions to deliver a single, more accurate, and stable output.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;

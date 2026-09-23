@@ -392,7 +392,7 @@ top10_df <- head(importance_df, 10)
 #| message: false
 #| warning: false
 #| fig-width: 6
-#| fig-height: 4
+#| fig-height: 4.5
 #| out-width: "95%"
 #| outputs: true
 
@@ -921,6 +921,12 @@ Next steps could include tracking player-level details on a play-by-play granula
 
 ::: {.notes}
 Thank you everyone for your time and attention. I'm now happy to take any questions.
+
+Additional notes:
+Gini Impurity is the probability of incorrectly classifying a randomly chosen element in the dataset if it were randomly labeled according to the class distribution in the dataset.
+
+RF: an ensemble machine learning algorithm used for categorical classification tasks. It works by building a multitude of independent decision trees during its training phase and combining their predictions to deliver a single, more accurate, and stable output.
+
 :::
 
 
